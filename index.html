@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html" />
+		<script src="jquery-2.1.4.min.js"></script>
+		<title>Alias</title>
+	
+		<style>
+			.wrapper{
+				text-align: center; margin:2em;
+				}
+			.word{
+				font-size: 500%;
+				width: 100%;
+				height: 100%;
+				vertical-align: middle;
+			}
+
+			</style>
+			
+	</head>
+
+
+<body>
+
+
+	<div class="wrapper">
+		<input type="file" multiple="multiple" accept=".txt,image/*">
+		<a href="#" class="submit button">Загрузить файлы</a>
+		<div class="word"></div>
+	</div>
+	
+<script>
+(function($){
+// Автор: Тимур Камаев, http://wp-kama.ru/
+
+// Глобальная переменная куда будут располагаться данные файлов. С не будем работать
+var files;
+var word_array;
+
+// Вешаем функцию на событие
+// Получим данные файлов и добавим их в переменную
+$('input[type=file]').change(function(){
+	files = this.files;
+});
+
+
+// Вешаем функцию ан событие click и отправляем AJAX запрос с данными файлов
+$('.submit.button').click(function( event ){
+	event.stopPropagation(); // Остановка происходящего
+	event.preventDefault();  // Полная остановка происходящего
+
+	// Содадим данные формы и добавим в них данные файлов из files
+	var data = new FormData();
+	$.each( files, function( key, value ){
+		data.append( key, value );
+	});
+
+	// Отправляем запрос
+	$.ajax({
+		url: './submit.php?uploadfiles',
+		type: 'POST',
+		data: data,
+		cache: false,
+		dataType: 'json',
+		processData: false, // Не обрабатываем файлы (Don't process the files)
+		contentType: false, // Так jQuery скажет серверу что это строковой запрос
+		success: function( respond, textStatus, jqXHR ){
+			// Если все ОК
+			if( typeof respond.error === 'undefined' ){
+				var files_path = respond.files;
+				word_array = files_path;
+			}
+			else{
+				console.log('ОШИБКИ ОТВЕТА сервера: ' + respond.error );
+			}
+		},
+		error: function( jqXHR, textStatus, errorThrown ){
+			console.log('ОШИБКИ AJAX запроса: ' + textStatus );
+		}
+	});
+	
+});
+
+$(document).on('click', function(){
+	parser();
+	setTimeout(function() {
+		$('.word').html( "Your time is out" );
+	}, 120000);
+});
+
+function parser(){
+	if (word_array.length){
+		var n = Math.floor(Math.random( ) * word_array.length);
+		$('.word').html( word_array[n] );
+		word_array.splice(n, 1);
+	}else{
+		$('.word').html( "All words were used, load new file" );
+	}
+}
+
+
+})(jQuery)
+</script>
+
+</body>
+</html>
+
+
+
+
